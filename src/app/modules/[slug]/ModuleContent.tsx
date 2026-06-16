@@ -38,6 +38,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { CORE_MODULES } from "@/lib/constants";
+import RegionSelector from "@/components/ui/RegionSelector";
 
 /* ==========================================================================
    Per-module form content (matching original Coze site patterns)
@@ -67,14 +68,7 @@ function RegistrationForm() {
       </div>
       <div>
         <label className="block text-sm font-medium text-text-dark mb-2">所在地区</label>
-        <div className="grid grid-cols-2 gap-3">
-          <select className="px-4 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary transition-all">
-            <option>选择省份</option><option>四川</option><option>贵州</option><option>云南</option><option>山东</option>
-          </select>
-          <select className="px-4 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary transition-all">
-            <option>选择城市</option><option>成都</option><option>贵阳</option><option>昆明</option><option>济南</option>
-          </select>
-        </div>
+        <RegionSelector columns={2} showDistrict={false} />
       </div>
       <div>
         <label className="block text-sm font-medium text-text-dark mb-2">创业赛道</label>
@@ -1374,11 +1368,7 @@ function RefineForm() {
       </div>
       <div>
         <label className="block text-sm font-medium text-text-dark mb-2">地理位置</label>
-        <div className="grid grid-cols-3 gap-2">
-          <select className="px-3 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary transition-all"><option>省</option><option>四川</option><option>贵州</option></select>
-          <select className="px-3 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary transition-all"><option>市</option><option>成都</option><option>贵阳</option></select>
-          <select className="px-3 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary transition-all"><option>县</option><option>蒲江</option><option>修文</option></select>
-        </div>
+        <RegionSelector className="grid grid-cols-3 gap-2" provincePlaceholder="省" cityPlaceholder="市" districtPlaceholder="县" />
       </div>
       <div>
         <label className="block text-sm font-medium text-text-dark mb-2">历史文化</label>

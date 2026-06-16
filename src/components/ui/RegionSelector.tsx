@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { getCities, getDistricts, PROVINCES } from "@/lib/region-data";
 
 export interface RegionValue {
@@ -10,24 +10,18 @@ export interface RegionValue {
 }
 
 interface RegionSelectorProps {
-  /** 选择变更回调 */
   onChange?: (value: RegionValue) => void;
-  /** 默认选中值 */
   defaultValue?: Partial<RegionValue>;
-  /** 是否显示区县级 */
   showDistrict?: boolean;
-  /** 列数（默认3：省/市/区 各一列；设为2则省、市并排） */
   columns?: 2 | 3;
-  /** 外层的 grid 类名 */
   className?: string;
-  /** 每列 placeholder */
   provincePlaceholder?: string;
   cityPlaceholder?: string;
   districtPlaceholder?: string;
 }
 
-const baseSelectClass =
-  "px-4 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary focus:ring-2 focus:ring-green-primary/10 transition-all w-full";
+const selectBase =
+  "px-4 py-3 rounded-xl border border-muted-bg bg-white text-sm text-text-dark focus:outline-none focus:border-green-primary focus:ring-2 focus:ring-green-primary/10 transition-all w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-muted-bg/50";
 
 export default function RegionSelector({
   onChange,
@@ -43,38 +37,64 @@ export default function RegionSelector({
   const [city, setCity] = useState(defaultValue?.city ?? "");
   const [district, setDistrict] = useState(defaultValue?.district ?? "");
 
-  const cities = useMemo(() => (province ? getCities(province) : []), [province]);
-  const districts = useMemo(
-    () => (province && city ? getDistricts(province, city) : []),
-    [province, city]
+  const cities = useMemo<string[]>(() => {
+    if (!province) return [];
+    return getCities(province);
+  }, [province]);
+
+  const districts = useMemo<string[]>(() => {
+    if (!province || !city) return [];
+    return getDistricts(province, city);
+  }, [province, city]);
+
+  const handleProvinceChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const p = e.target.value;
+      setProvince(p);
+      setCity("");
+      setDistrict("");
+      if (onChange) onChange({ province: p, city: "", district: "" });
+    },
+    [onChange]
   );
 
-  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const p = e.target.value;
-    setProvince(p);
-    setCity("");
-    setDistrict("");
-    onChange?.({ province: p, city: "", district: "" });
-  };
+  const handleCityChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const c = e.target.value;
+      setCity(c);
+      setDistrict("");
+      if (onChange) onChange({ province, city: c, district: "" });
+    },
+    [onChange, province]
+  );
 
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const c = e.target.value;
-    setCity(c);
-    setDistrict("");
-    onChange?.({ province, city: c, district: "" });
-  };
+  const handleDistrictChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const d = e.target.value;
+      setDistrict(d);
+      if (onChange) onChange({ province, city, district: d });
+    },
+    [onChange, province, city]
+  );
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const d = e.target.value;
-    setDistrict(d);
-    onChange?.({ province, city, district: d });
-  };
+  const cityDisabled = !province;
+  const districtDisabled = !city;
 
-  const cols = columns === 2 ? 2 : showDistrict ? 3 : 2;
+  const gridClass =
+    columns === 2
+      ? "grid grid-cols-2 gap-3"
+      : showDistrict
+        ? "grid grid-cols-3 gap-2"
+        : "grid grid-cols-2 gap-3";
 
   return (
-    <div className={className ?? `grid grid-cols-${cols} gap-3`}>
-      <select value={province} onChange={handleProvinceChange} className={baseSelectClass}>
+    <div className={className ?? gridClass}>
+      {/* 省份 */}
+      <select
+        value={province}
+        onChange={handleProvinceChange}
+        className={selectBase}
+      >
         <option value="">{provincePlaceholder}</option>
         {PROVINCES.map((p) => (
           <option key={p} value={p}>
@@ -83,11 +103,12 @@ export default function RegionSelector({
         ))}
       </select>
 
+      {/* 城市 */}
       <select
         value={city}
         onChange={handleCityChange}
-        disabled={!province}
-        className={baseSelectClass}
+        disabled={cityDisabled}
+        className={selectBase}
       >
         <option value="">{cityPlaceholder}</option>
         {cities.map((c) => (
@@ -97,12 +118,13 @@ export default function RegionSelector({
         ))}
       </select>
 
+      {/* 区县 */}
       {showDistrict && (
         <select
           value={district}
           onChange={handleDistrictChange}
-          disabled={!city}
-          className={baseSelectClass}
+          disabled={districtDisabled}
+          className={selectBase}
         >
           <option value="">{districtPlaceholder}</option>
           {districts.map((d) => (
